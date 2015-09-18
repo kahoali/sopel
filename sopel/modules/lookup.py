@@ -17,6 +17,7 @@ class LDAPSection(StaticSection):
     base_dn = ValidatedAttribute('base_dn', str)
     ldap_host = ValidatedAttribute('host', str)
     ldap_search_attrs = ValidatedAttribute('search_attrs', str)
+    dict_path = ValidatedAttribute('dict_path',str)
     dict  = {}
 
 def configure(config):
@@ -24,10 +25,12 @@ def configure(config):
     config.ldap.configure_setting('base_dn',"What is your base dn?")
     config.ldap.configure_setting('ldap_host',"Which LDAP host should I communicate with?")
     config.ldap.configure_setting('search_attrs',"What LDAP attributes should I use to search?")
+    config.ldap.configure_setting('dict_path', "Where is the attribute dictionary for LDAP translation?")
 
 def setup(bot):
     bot.config.define_section('ldap',LDAPSection)
     bot.config.ldap.dict = {}
+    # open( bot.config.ldap.dict_path, "r" )
 
 # ldap search command
 @sopel.module.require_privmsg
