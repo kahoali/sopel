@@ -11,7 +11,15 @@ import sopel.module
 import ldap
 import sys
 
+
+def configure(config):
+    pass
+
+
+def setup(bot):
+    pass
+
 # ldap search command
-@sopel.module.commands('search, lookup')
+@sopel.module.commands('search', 'lookup')
 def search(bot, trigger):
-    bot.say('Why do you want to know about' + trigger + ?)
+    bot.reply('Why do you want to know about ' + trigger.group(2) + "?")
