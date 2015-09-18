@@ -8,6 +8,7 @@ This module relies on LDAP, python-ldap
 from __future__ import unicode_literals
 
 import ldap
+import ldif
 import sys
 import os.path
 import sopel.module
@@ -38,16 +39,30 @@ def setup(bot):
 def search(bot, trigger):
     bot.say("I am configured to use:" + bot.config.ldap.base_dn)
     bot.reply('Why do you want to know about ' + trigger.group(2) + "?")
-
-    _ldap_get_all_attrs(bot,trigger.group(2))
+    command_args = trigger.group(2).split(" ")
+    ldif_writer = ldif.LDIFWriter(sys.stdout)
+    if len(command_args) > 1:
+        if str(command_args[1]) == u'*':
+            result = _ldap_do_search(bot,command_args[0])
+            for dn,entry in result:
+                bot.say("In dn: " + str(dn))
+                for key in entry.keys():
+                    bot.say(str(key) + ": " + str(entry.get(key,"Not set.")) )
+        else:
+            result = _ldap_do_search(bot,command_args[0],[str(command_args[1])])
+            for dn,entry in result:
+                bot.say(str(entry[str(command_args[1])][0]))
+    else:
+        result = _ldap_do_search(bot,command_args[0])
+        for val in result[0][1].keys():
+            bot.say(val)
 
 # helper method
-def _ldap_get_all_attrs(bot,query_string,specific_attr=None):
+def _ldap_do_search(bot,query_string,specific_attr=None):
     #filter = '(uid=%s)' % str(sys.argv[1])
     attrs = bot.config.ldap.ldap_search_attrs.split(',')
     filter = '(|' + ''.join(map( lambda x : ( "(" + str(x) + "=%s" + ")"), attrs )) + ")"
     filter = filter % tuple([query_string] * len(attrs))
     l = ldap.initialize(bot.config.ldap.ldap_host)
     result = l.search_s(bot.config.ldap.base_dn,ldap.SCOPE_SUBTREE,filter,specific_attr)
-    for val in result[0][1].keys():
-        bot.say(val)
+    return result
