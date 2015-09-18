@@ -19,7 +19,6 @@ class LDAPSection(StaticSection):
     ldap_host = ValidatedAttribute('host', str)
     ldap_search_attrs = ValidatedAttribute('search_attrs', str)
     dict_path = ValidatedAttribute('dict_path',str)
-    commands  = {}
 
 def configure(config):
     config.define_section('ldap',LDAPSection, valude=False)
@@ -37,8 +36,9 @@ def setup(bot):
 
         for line in content:
             parts = line.strip("\n").split("=")
-            keys = parts[1].split(",")
-            value = parts[0]
+            if len(parts) > 0:
+                keys = map( lambda x : ( str(x).strip()), parts[1].split(",") )
+                value = str(parts[0]).strip()
 
             for k in keys:
                 bot.config.ldap.commands[k] = value
@@ -51,6 +51,7 @@ def search(bot, trigger):
     bot.reply('Why do you want to know about ' + trigger.group(2) + "?")
     command_args = trigger.group(2).split(" ")
     ldif_writer = ldif.LDIFWriter(sys.stdout)
+
     if len(command_args) > 1:
         if str(command_args[1]) == u'*':
             result = _ldap_do_search(bot,command_args[0])
@@ -59,9 +60,10 @@ def search(bot, trigger):
                 for key in entry.keys():
                     bot.say(str(key) + ": " + str(entry.get(key,"Not set.")) )
         else:
-            result = _ldap_do_search(bot,command_args[0],[str(command_args[1])])
+            query_attribute = bot.config.ldap.commands.get(str(command_args[1]),str(command_args[1]))
+            result = _ldap_do_search(bot,command_args[0],[query_attribute])
             for dn,entry in result:
-                bot.say(str(entry[str(command_args[1])][0]))
+                bot.say(str(entry[str(query_attribute)][0]))
     else:
         result = _ldap_do_search(bot,command_args[0])
         for val in result[0][1].keys():
