@@ -19,7 +19,7 @@ class LDAPSection(StaticSection):
     ldap_host = ValidatedAttribute('host', str)
     ldap_search_attrs = ValidatedAttribute('search_attrs', str)
     dict_path = ValidatedAttribute('dict_path',str)
-    dict  = {}
+    commands  = {}
 
 def configure(config):
     config.define_section('ldap',LDAPSection, valude=False)
@@ -30,8 +30,18 @@ def configure(config):
 
 def setup(bot):
     bot.config.define_section('ldap',LDAPSection)
-    bot.config.ldap.dict = {}
-    # open( bot.config.ldap.dict_path, "r" )
+    bot.config.ldap.commands = {}
+    # Load in possible commands from configuration file
+    with open( bot.config.ldap.dict_path, "r" ) as f:
+        content = f.readlines()
+
+        for line in content:
+            parts = line.strip("\n").split("=")
+            keys = parts[1].split(",")
+            value = parts[0]
+
+            for k in keys:
+                bot.config.ldap.commands[k] = value
 
 # ldap search command
 @sopel.module.require_privmsg
