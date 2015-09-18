@@ -7,19 +7,25 @@ This module relies on LDAP, python-ldap
 """
 from __future__ import unicode_literals
 
-import sopel.module
 import ldap
 import sys
+import os.path
+import sopel.module
+from sopel.config.types import StaticSection, ValidatedAttribute
 
+class LDAPSection(StaticSection):
+    base_dn = ValidatedAttribute('base_dn', str)
 
 def configure(config):
-    pass
+    config.define_section('ldap',LDAPSection, valude=False)
+    config.ldap.configure_setting('base_dn',"What is your base dn?")
 
 
 def setup(bot):
-    pass
+    bot.config.define_section('ldap',LDAPSection)
 
 # ldap search command
 @sopel.module.commands('search', 'lookup')
 def search(bot, trigger):
+    bot.say("I am configured to use:" + bot.config.ldap.base_dn)
     bot.reply('Why do you want to know about ' + trigger.group(2) + "?")
